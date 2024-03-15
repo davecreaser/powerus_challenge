@@ -132,6 +132,19 @@ describe('FlightsService', () => {
           provide: DbService,
           useValue: {
             upsert: jest.fn(),
+            search: jest.fn(() =>
+              Promise.resolve([
+                {
+                  arrival_date_time_utc: '2019-08-08T10:00:00.000Z',
+                  departure_date_time_utc: '2019-08-08T08:00:00.000Z',
+                  destination_name: 'Stansted',
+                  duration: 120,
+                  flight_number: '8543',
+                  origin_name: 'Schonefeld',
+                  price: 147.9,
+                },
+              ]),
+            ),
             findAll: () =>
               Promise.resolve([
                 {
@@ -270,6 +283,26 @@ describe('FlightsService', () => {
           price: 147.9,
         },
       ]);
+    });
+
+    it('should be able to search for flights', async () => {
+      const flights = await flightsService.search({
+        origin_name: 'Schonefeld',
+      });
+      expect(flights).toStrictEqual([
+        {
+          arrival_date_time_utc: '2019-08-08T10:00:00.000Z',
+          departure_date_time_utc: '2019-08-08T08:00:00.000Z',
+          destination_name: 'Stansted',
+          duration: 120,
+          flight_number: '8543',
+          origin_name: 'Schonefeld',
+          price: 147.9,
+        },
+      ]);
+      expect(dbService.search).toHaveBeenCalledWith({
+        origin_name: 'Schonefeld',
+      });
     });
 
     it('should fetch flights from each endpoint', async () => {
