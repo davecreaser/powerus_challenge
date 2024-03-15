@@ -5,6 +5,7 @@ import { Flight } from '../flights/flight.interface';
 
 describe('AppController', () => {
   let appController: AppController;
+  let flightsService: FlightsService;
 
   const result: Flight[] = [
     {
@@ -32,12 +33,14 @@ describe('AppController', () => {
         {
           provide: FlightsService,
           useValue: {
+            search: jest.fn(() => result),
             getAll: () => result,
           },
         },
       ],
     }).compile();
 
+    flightsService = app.get<FlightsService>(FlightsService);
     appController = app.get<AppController>(AppController);
   });
 
@@ -45,6 +48,17 @@ describe('AppController', () => {
     it('should return an array of flights', async () => {
       const flights = await appController.getFlights();
       expect(flights).toBe(result);
+    });
+  });
+
+  describe('searchFlights', () => {
+    it('should return an array of flights', async () => {
+      const flights = await appController.searchFlights('Stansted');
+      expect(flights).toBe(result);
+      expect(flightsService.search).toHaveBeenCalledWith({
+        destination_name: null,
+        origin_name: 'Stansted',
+      });
     });
   });
 });

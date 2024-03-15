@@ -1,10 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Flight } from './flight.entity';
-import { LessThan, MoreThan, Repository } from 'typeorm';
+import {
+  FindManyOptions,
+  LessThan,
+  MoreThan,
+  Repository,
+  ILike,
+} from 'typeorm';
 import { UpsertFlightDto } from './upsert-flight.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { INVALIDATION_TIME } from './../constants';
+import { SearchFlightDto } from './search-flight.dto';
 
 @Injectable()
 export class DbService {
@@ -25,6 +32,23 @@ export class DbService {
     const flights = await this.flightRepository.find({
       where: { updated_at: MoreThan(lastInvalidTime) },
     });
+    return flights;
+  }
+
+  async search(filters: SearchFlightDto): Promise<Flight[]> {
+    const lastInvalidTime = Date.now() - INVALIDATION_TIME;
+    const options: FindManyOptions<Flight> = {
+      where: {
+        updated_at: MoreThan(lastInvalidTime),
+      },
+    };
+    if (filters.origin_name) {
+      options.where['origin_name'] = ILike(filters.origin_name);
+    }
+    if (filters.destination_name) {
+      options.where['destination_name'] = ILike(filters.destination_name);
+    }
+    const flights = await this.flightRepository.find(options);
     return flights;
   }
 

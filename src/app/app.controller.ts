@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { FlightsService } from '../flights/flights.service';
 import { Flight } from '../flights/flight.interface';
 
@@ -9,6 +9,18 @@ export class AppController {
   @Get()
   async getFlights(): Promise<Flight[]> {
     const flights = await this.flightsService.getAll();
+    return flights;
+  }
+
+  @Get('search?')
+  async searchFlights(
+    @Query('origin') origin?: string,
+    @Query('destination') destination?: string,
+  ): Promise<Flight[]> {
+    const flights = await this.flightsService.search({
+      origin_name: origin || null,
+      destination_name: destination || null,
+    });
     return flights;
   }
 }

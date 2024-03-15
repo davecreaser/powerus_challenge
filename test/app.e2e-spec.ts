@@ -5,7 +5,8 @@ import * as request from 'supertest';
 import { of } from 'rxjs';
 import { AppModule } from '../src/app/app.module';
 import { FLIGHT_SOURCES } from './../src/constants';
-import { TypeOrmModule } from '@nestjs/typeorm';
+import { TypeOrmConfigService } from '../src/app/typeorm-config.service';
+import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from '@nestjs/typeorm';
 import { Flight } from '../src/db/flight.entity';
 
 const responses = {
@@ -233,6 +234,18 @@ const responses = {
   },
 };
 
+class MockTypeOrmConfigService implements TypeOrmOptionsFactory {
+  createTypeOrmOptions(): TypeOrmModuleOptions {
+    return {
+      type: 'sqlite',
+      database: 'db/e2e-sql',
+      synchronize: true,
+      entities: [Flight],
+    };
+  }
+}
+const mockTypeOrmConfigService = new MockTypeOrmConfigService();
+
 describe('AppController (e2e)', () => {
   let app: INestApplication;
 
@@ -240,19 +253,15 @@ describe('AppController (e2e)', () => {
     jest.useFakeTimers({ now: new Date('1994-06-28') });
 
     const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [
-        AppModule,
-        TypeOrmModule.forRoot({
-          type: 'sqlite',
-          database: 'db/e2e_sql',
-          synchronize: true,
-          entities: [Flight],
-        }),
-      ],
+      imports: [AppModule],
     })
+      .overrideProvider(TypeOrmConfigService)
+      .useValue(mockTypeOrmConfigService)
       .overrideProvider(HttpService)
       .useValue({
-        get: (url: string) => of(responses[url]),
+        get: (url: string) => {
+          return of(responses[url]);
+        },
       })
       .compile();
 
@@ -378,6 +387,69 @@ describe('AppController (e2e)', () => {
           flight_number: '1253',
           duration: 125,
           price: 154,
+          updated_at: 772761600000,
+        },
+        {
+          id: '12542019-08-10T05:35:00.000Z',
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T05:35:00.000Z',
+          arrival_date_time_utc: '2019-08-10T07:35:00.000Z',
+          flight_number: '1254',
+          duration: 124,
+          price: 154,
+          updated_at: 772761600000,
+        },
+      ]);
+  });
+
+  it('/search? (GET)', () => {
+    return request(app.getHttpServer())
+      .get('/search?origin=stansted')
+      .expect(200)
+      .expect([
+        {
+          id: '85422019-08-10T05:35:00.000Z',
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T05:35:00.000Z',
+          arrival_date_time_utc: '2019-08-10T07:35:00.000Z',
+          flight_number: '8542',
+          duration: 120,
+          price: 129,
+          updated_at: 772761600000,
+        },
+        {
+          id: '1452019-08-10T06:50:00.000Z',
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T06:50:00.000Z',
+          arrival_date_time_utc: '2019-08-10T08:40:00.000Z',
+          flight_number: '145',
+          duration: 110,
+          price: 134,
+          updated_at: 772761600000,
+        },
+        {
+          id: '85442019-08-10T18:00:00.000Z',
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T18:00:00.000Z',
+          arrival_date_time_utc: '2019-08-10T20:00:00.000Z',
+          flight_number: '8544',
+          duration: 120,
+          price: 130,
+          updated_at: 772761600000,
+        },
+        {
+          id: '2652019-08-10T18:00:00.000Z',
+          origin_name: 'Stansted',
+          destination_name: 'Schonefeld',
+          departure_date_time_utc: '2019-08-10T18:00:00.000Z',
+          arrival_date_time_utc: '2019-08-10T20:00:00.000Z',
+          flight_number: '265',
+          duration: 100,
+          price: 152,
           updated_at: 772761600000,
         },
         {

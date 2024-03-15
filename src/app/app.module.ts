@@ -6,17 +6,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Flight } from '../db/flight.entity';
 import { DbService } from '../db/db.service';
 import { ScheduleModule } from '@nestjs/schedule';
+import { TypeOrmConfigService } from './typeorm-config.service';
 
 @Module({
   imports: [
     HttpModule.register({
       timeout: 10000,
     }),
-    TypeOrmModule.forRoot({
-      type: 'sqlite',
-      database: 'db/sql',
-      synchronize: true,
-      entities: [Flight],
+    TypeOrmModule.forRootAsync({
+      imports: [TypeOrmConfigService],
+      useClass: TypeOrmConfigService,
     }),
     TypeOrmModule.forFeature([Flight]),
     ScheduleModule.forRoot(),

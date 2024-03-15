@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { DbService } from './db.service';
-import { MoreThan, Repository } from 'typeorm';
+import { ILike, MoreThan, Repository } from 'typeorm';
 import { Flight } from './flight.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { INVALIDATION_TIME } from '../constants';
@@ -72,6 +72,42 @@ describe('DbService', () => {
 
     expect(repositoryMock.find).toHaveBeenCalledWith({
       where: { updated_at: MoreThan(Date.now() - INVALIDATION_TIME) },
+    });
+  });
+
+  it('should allow searching for flights from the db', async () => {
+    const mockDateObject = new Date('1994-06-28');
+    jest
+      .spyOn(global.Date, 'now')
+      .mockImplementation(() => mockDateObject.getTime());
+
+    const dbFlights: Flight[] = [
+      {
+        id: '1442019-08-08T04:30:00.000Z',
+        origin_name: 'Schonefeld',
+        destination_name: 'Stansted',
+        departure_date_time_utc: '2019-08-08T04:30:00.000Z',
+        arrival_date_time_utc: '2019-08-08T06:25:00.000Z',
+        flight_number: '144',
+        duration: 115,
+        price: 140,
+        updated_at: Date.now(),
+      },
+    ];
+
+    repositoryMock.find.mockReturnValue(dbFlights);
+    const flights = await service.search({
+      origin_name: 'Schonefeld',
+      destination_name: 'Stansted',
+    });
+    expect(flights).toEqual(dbFlights);
+
+    expect(repositoryMock.find).toHaveBeenCalledWith({
+      where: {
+        updated_at: MoreThan(Date.now() - INVALIDATION_TIME),
+        origin_name: ILike('Schonefeld'),
+        destination_name: ILike('Stansted'),
+      },
     });
   });
 

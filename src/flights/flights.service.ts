@@ -5,6 +5,7 @@ import { Flight, FlightResponse } from './flight.interface';
 import { FLIGHT_SOURCES } from '../constants';
 import { DbService } from '../db/db.service';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { SearchFlightDto } from 'src/db/search-flight.dto';
 
 @Injectable()
 export class FlightsService {
@@ -58,6 +59,12 @@ export class FlightsService {
   // Get an array of all of the flights currently stored.
   async getAll(): Promise<Flight[]> {
     const flights = await this.dbService.findAll();
+    return flights;
+  }
+
+  // Search for flights by origin / destination.
+  async search(filters: SearchFlightDto): Promise<Flight[]> {
+    const flights = await this.dbService.search(filters);
     return flights;
   }
 
