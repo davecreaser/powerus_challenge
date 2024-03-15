@@ -1,7 +1,7 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { AppController } from './app.controller';
-import { FlightsService } from './flights.service';
-import { Flight } from './flight.interface';
+import { FlightsService } from '../flights/flights.service';
+import { Flight } from '../flights/flight.interface';
 
 describe('AppController', () => {
   let appController: AppController;
@@ -32,9 +32,6 @@ describe('AppController', () => {
         {
           provide: FlightsService,
           useValue: {
-            _addResponseIntoCache: () => null,
-            _fetchFlightsFromUrl: () => null,
-            _fetchFlights: () => null,
             getAll: () => result,
           },
         },
@@ -45,8 +42,9 @@ describe('AppController', () => {
   });
 
   describe('getFlights', () => {
-    it('should return an array of flights', () => {
-      expect(appController.getFlights()).toBe(result);
+    it('should return an array of flights', async () => {
+      const flights = await appController.getFlights();
+      expect(flights).toBe(result);
     });
   });
 });

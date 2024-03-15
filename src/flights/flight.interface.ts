@@ -6,6 +6,7 @@ export interface Flight {
   flight_number: string;
   duration: number;
   price?: number;
+  updated_at?: number;
 }
 
 export type FlightResponse = {
