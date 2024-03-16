@@ -1,5 +1,6 @@
 import { IsNotEmpty, IsString, IsNumber } from 'class-validator';
 
+// Data transfer object to describe how to upsert a flight.
 export class UpsertFlightDto {
   @IsNotEmpty({ message: 'Field id must be added' })
   @IsString()
