@@ -1,30 +1,13 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
-
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
-
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+PowerUs Coding Challenge Submission.
+
+Flight service to scrape flight data from a list of sources and return a set to the client.
+
+## Requirements
+
+- NodeJS installed globally
+- NPM installed globally
 
 ## Installation
 
@@ -32,20 +15,13 @@
 $ npm install
 ```
 
-## Running the app
+## Starting the service
 
 ```bash
-# development
 $ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
 ```
 
-## Test
+## Running the tests
 
 ```bash
 # unit tests
@@ -53,21 +29,54 @@ $ npm run test
 
 # e2e tests
 $ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
 ```
 
-## Support
+## Using the service
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+The service will be listening on localhost:3000 when started.
 
-## Stay in touch
+There are two currently available endpoints you can call:
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+### GET /
 
-## License
+Which returns a list of all currently known flights.
 
-Nest is [MIT licensed](LICENSE).
+### GET /search?
+
+Which returns a filtered list of all currently known flights. The are two currently implemented query parameters which can be used as search filters. These are 'origin' and 'destination'.
+
+Examples:
+
+- `localhost:3000/search?origin=stansted` will return a list of all flights which originate from Stansted airport.
+
+- `localhost:3000/search?destination=stansted` will return a list of all flights which land at Stansted airport.
+
+- `localhost:3000/search?origin=stansted&destination=schonefeld` will return a list of all flights which originate at Stansted and land at Schonefeld.
+
+## Development Notes
+
+### First Iteration
+
+The first idea I had when creating this app was to store the fetched flights with an in-memory cache. This felt like a simple approach to get it up and running quickly, and required almost no third-party code (aside from the Nest framework itself).
+
+The idea here was to fetch flights every few minutes, wait for all reponses from the sources to either finish or fail, and store the full response in a hash-map with no duplicates, where the key is the current timestamp, and the value is the array of flights.
+
+When the user requests flights from my service, each 'timeboxed-window' in the cache would be checked to see if it was still valid. If so, then those flights would be added to a hash-map ready to be returned. Each window in the cache would be checked this way in chronological order, so the latest flight details value would be used, and they would all be valid. This hash map would then be turned into an array and sent back to the client.
+
+Every so often, the cache would be cleaned of any out-of-date cache windows.
+
+Whilst this solution worked, it wasn't ideal. Too much work had to be done at request-time, and there was potential for too many cache windows to being created unnecessarily, often with duplicate data. It was also not very scalable, as adding any other endpoints such as searching, pagination, or ordering by some property would all be difficult to implement.
+
+### Second Iteration
+
+For the second iteration, I decided to use a database. This would allow for more scalability, allowing easier filtering and pagination in the future. It also ensures that there's not too much unnecessary data being added, as flights could be upserted into the db and just overwritten, with an `updated_at` key added so that you know which flights are still valid on each call.
+
+The database I decided to use was sqlite, as it was very lightweight and allowed for easy setup. In the future, it can very easily be replaced with something like mySQL or PostgreSQL.
+
+As NestJS themselves suggest, I also used Typeorm to make interacting with the database very simple for the developer.
+
+To show how the service could be extended in the future, I created a search endpoint, where the client can use query parameters to filter for flights with specific origins and destinations.
+
+In terms of fetching the data from the sources, I've implemented a node-cron job which is called every minute. It loops through each source, and triggers an asynchronous function to fetch data from that source, and then place the results into the db using an upsert. This job could be extended and improved on in the future, to instead implement some sort of priority queue to fetch results based on which endpoint hasn't been called recently. It could also use workers to parallelize the calls.
+
+My http service has a timeout of 10 seconds on each call to allow for slow responses from the sources. There is also a retry mechanism on each call, which allows for 5 retries. This retry / error handling is another part of the service which could be improved in the future, to cover all sorts of errors. For example, if the error is of type bad request or too many requests, then the retries perhaps shouldn't happen.

@@ -14,11 +14,11 @@ export class FlightsService {
     private readonly httpService: HttpService,
   ) {}
 
-  // Reduce the response into a hashmap of flights, where the key is the flight number + departure date.
-  // We use a hashmap as it is the fastest way to ensure there are no duplicates.
+  // Send each flight in the response to the database service to be upserted.
   private _storeResponse(response: FlightResponse) {
     response.forEach(({ slices, price }) => {
       slices.forEach((flight) => {
+        // The unique key for each flight, to handle duplicates.
         const id = flight.flight_number + flight.departure_date_time_utc;
 
         this.dbService.upsert({ ...flight, price, id });
@@ -31,14 +31,15 @@ export class FlightsService {
     console.log(`Fetching flights from ${url}...`);
     await firstValueFrom(
       this.httpService.get<{ flights: FlightResponse }>(url).pipe(
-        // Tap to add helpful logging.
         tap({
           next: (response) => {
+            // Store any correct responses.
             if (response?.data?.flights) {
               console.log(`Finished fetching flights from ${url}`);
               this._storeResponse(response.data.flights);
             }
           },
+          // Log errors.
           error: (err) =>
             console.log(
               `There was an error fetching flights from ${url}: `,
@@ -51,7 +52,7 @@ export class FlightsService {
     );
   }
 
-  // Fetch flights from all of the urls.
+  // Asynchronously fetch flights from all of the urls.
   private _fetchFlights() {
     FLIGHT_SOURCES.forEach((url) => this._fetchFlightsFromUrl(url));
   }
@@ -62,16 +63,18 @@ export class FlightsService {
     return flights;
   }
 
-  // Search for flights by origin / destination.
+  // Search for flights based on filters.
   async search(filters: SearchFlightDto): Promise<Flight[]> {
     const flights = await this.dbService.search(filters);
     return flights;
   }
 
+  // Fetch flights when the module is initialized.
   onModuleInit() {
     this._fetchFlights();
   }
 
+  // Node-cron job to fetch new flights every minute.
   @Cron(CronExpression.EVERY_MINUTE)
   fetchFlightsCron() {
     this._fetchFlights();

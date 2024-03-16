@@ -6,12 +6,14 @@ import { Flight } from '../flights/flight.interface';
 export class AppController {
   constructor(private readonly flightsService: FlightsService) {}
 
+  // Get all flights at '/'
   @Get()
   async getFlights(): Promise<Flight[]> {
     const flights = await this.flightsService.getAll();
     return flights;
   }
 
+  // Search for flights at '/search' with query parameters
   @Get('search?')
   async searchFlights(
     @Query('origin') origin?: string,
