@@ -23,6 +23,8 @@ $ npm run start
 
 ## Running the tests
 
+Use the below commands to run the tests and end to end tests. These tests also run on each pull request, and they must pass for the pull request to be merged. In production, linters should also run on these pull requests, and a rule should be set to have one or two passing reviews before the pr can be merged.
+
 ```bash
 # unit tests
 $ npm run test
