@@ -45,7 +45,7 @@ Which returns a list of all currently known flights.
 
 ### GET /search?
 
-Which returns a filtered list of all currently known flights. The are two currently implemented query parameters which can be used as search filters. These are 'origin' and 'destination'.
+Which returns a filtered list of all currently known flights. There are currently two implemented query parameters which can be used as search filters. These are 'origin' and 'destination'.
 
 Examples:
 
@@ -67,7 +67,7 @@ When the user requests flights from my service, each 'timeboxed-window' in the c
 
 Every so often, the cache would be cleaned of any out-of-date cache windows.
 
-Whilst this solution worked, it wasn't ideal. Too much work had to be done at request-time, and there was potential for too many cache windows to being created unnecessarily, often with duplicate data. It was also not very scalable, as adding any other endpoints such as searching, pagination, or ordering by some property would all be difficult to implement.
+Whilst this solution worked, it wasn't ideal. Too much work had to be done at request-time, and there was potential for too many cache windows to be created unnecessarily, often with duplicate data. It was also not very scalable, as adding any other endpoints such as searching, pagination, or ordering by some property would all be difficult to implement.
 
 ### Second Iteration
 
